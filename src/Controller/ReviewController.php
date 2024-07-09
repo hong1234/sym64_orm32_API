@@ -5,17 +5,9 @@ use App\Service\BookService;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
-use Symfony\Component\Serializer\Serializer;
-
-use App\Dto\ReviewDto;
 
 #[Route('/api')]
-class ReviewController extends AbstractController {
+class ReviewController extends BaseController {
 
     private $bookService;
    
@@ -89,38 +81,6 @@ class ReviewController extends AbstractController {
 
     public function getInputArray(Request $request){
         return json_decode($request->getContent(), true);
-    }
-
-    public function getReviewDtoArray($reviews){
-        $reviewDtos = [];
-        foreach ($reviews as $review) {
-            $reviewDtos[] = $this->getReviewDto($review);
-        }
-        return $reviewDtos;
-    }
-
-    public function getReviewDto($review){
-        $reviewDto = new ReviewDto();
-        $reviewDto->setId($review->getId())
-            ->setName($review->getName())
-            ->setEmail($review->getEmail())
-            ->setContent($review->getContent())
-            ->setCreatedOn(date_format($review->getCreatedOn(), 'd-m-Y H:i'))
-            ->setBookid($review->getBook()->getId())
-            ;
-
-        if($review->getUpdatedOn() !=null)
-            $viewDto->setUpdatedOn(date_format($review->getUpdatedOn(), 'd-m-Y H:i'));
-
-        return $reviewDto;
-    }
-
-    public function toJson($items){
-        $serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
-        return $serializer->serialize($items, 'json', [
-		    'circular_reference_handler' => function ($object) { return $object->getId(); },
-            'ignored_attributes' => ['book']
-	    ]);
     }
 
 }

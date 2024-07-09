@@ -5,17 +5,9 @@ use App\Service\BookService;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
-use Symfony\Component\Serializer\Serializer;
-
-use App\Dto\BookDto;
 
 #[Route('/api')]
-class BookController extends AbstractController {
+class BookController extends BaseController {
 
     private $bookService;
    
@@ -92,13 +84,13 @@ class BookController extends AbstractController {
                 "code"    => "404",
                 "message" => "Book {$bookId} not found "
             ];
-            return new Response(json_encode($rs), Response::HTTP_NOT_FOUND, ['Content-Type' => 'application/json']);
+            return new Response($this->toJson($rs), Response::HTTP_NOT_FOUND, ['Content-Type' => 'application/json']);
         }
 
         $rs = [
             "code"    => "200",
             "message" => "Book {$bookId}",
-            "data"    => $this->getBookDto($book)
+            "data"    => $this->getBookDtoDeep($book)
             // "data"    =>  $book
         ];
         return new Response($this->toJson($rs), Response::HTTP_OK, ['Content-Type' => 'application/json']);
@@ -134,35 +126,6 @@ class BookController extends AbstractController {
 
     public function getInputArray(Request $request){
         return json_decode($request->getContent(), true);
-    }
-
-    public function getBookDtoArray($books){
-        $bookDtos = [];
-        foreach ($books as $book) {
-            $bookDtos[] = $this->getBookDto($book);
-        }
-        return $bookDtos;
-    }
-
-    public function getBookDto($book){
-        $bookDto = new BookDto();
-        $bookDto->setId($book->getId())
-            ->setTitle($book->getTitle())
-            ->setContent($book->getContent())
-            ->setCreatedOn(date_format($book->getCreatedOn(),'d-m-Y H:i'));
-
-        if($book->getUpdatedOn() !=null)
-            $bookDto->setUpdatedOn(date_format($book->getUpdatedOn(),'d-m-Y H:i'));
-
-        return $bookDto;
-    }
-
-    public function toJson($items){
-        $serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
-        return $serializer->serialize($items, 'json', [
-		    'circular_reference_handler' => function ($object) { return $object->getId(); },
-            'ignored_attributes' => ['book']
-	    ]);
     }
 
 }

@@ -8,7 +8,7 @@ class BookDto {
     private ?string $content = null;
     private ?string $createdOn = null;
     private ?string $updatedOn = null;
-    // private ?array $reviews;
+    private ?array $reviews = null;
 
     public function __construct(){}
 
@@ -72,11 +72,17 @@ class BookDto {
         return $this;
     }
 
-    // public function setReviews(array $reviews=[]): static
-    // {
-    //     $this->reviews = $reviews;
+    public function getReviews(): ?array
+    {
 
-    //     return $this;
-    // }
+        return $this->reviews;
+    }
+
+    public function setReviews(array $reviews=[]): static
+    {
+        $this->reviews = $reviews;
+
+        return $this;
+    }
 
 }
