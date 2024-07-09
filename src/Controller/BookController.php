@@ -7,9 +7,16 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
+use Symfony\Component\Serializer\Serializer;
+
+use App\Dto\BookDto;
+
 #[Route('/api')]
-class BookController extends AbstractController
-{
+class BookController extends AbstractController {
+
     private $bookService;
    
     public function __construct(BookService $bookService) {
@@ -18,47 +25,144 @@ class BookController extends AbstractController
 
     #[Route('/books', name: 'book_add', methods: ['POST'])]
     public function addBook(Request $request): Response {
-        $data = json_decode($request->getContent(), true);
-        $bookJson = $this->bookService->addBook($data);
-        return new Response($bookJson, Response::HTTP_CREATED, ['Content-Type' => 'application/json']);
+        $data = $this->getInputArray($request);
+
+        $book = $this->bookService->addBook($data);
+
+        $rs = [
+            "code"    => "200",
+            "message" => "1 Book created",
+            "data"    => $this->getBookDto($book)
+            // "data"    => $book
+        ];
+        return new Response($this->toJson($rs), Response::HTTP_CREATED, ['Content-Type' => 'application/json']);
     }
 
-    #[Route('/books/{bookId}', name: 'book_update', methods: ['PUT'], requirements: ['bookId' => '\d+'])]
-    public function updateBook($bookId, Request $request): Response {   
-        $data = json_decode($request->getContent(), true);
-        $updatedBookJson = $this->bookService->updateBook($bookId, $data);
-        if ($updatedBookJson==null)
-            return new Response(json_encode(['error' => 'Book not found']), Response::HTTP_NOT_FOUND);
-        return new Response($updatedBookJson, Response::HTTP_OK, ['Content-Type' => 'application/json']);
+    #[Route('/books/{bookId}', name: 'book_update', requirements: ['bookId' => '\d+'], methods: ['PUT'])]
+    public function updateBook(int $bookId, Request $request): Response { 
+        $rs = [];
+        $data = $this->getInputArray($request);
+        $book = $this->bookService->updateBook($bookId, $data);
+
+        if(!$book){
+            $rs = [
+                "code"    => "404",
+                "message" => "Book {$bookId} not found "
+            ];
+            return new Response($this->toJson($rs), Response::HTTP_NOT_FOUND, ['Content-Type' => 'application/json']);
+        } 
+
+        $rs = [
+            "code"    => "200",
+            "message" => "Book {$bookId} updated",
+            "data"    => $this->getBookDto($book)
+            // "data"    => $book
+        ];
+        return new Response($this->toJson($rs), Response::HTTP_OK, ['Content-Type' => 'application/json']);
     }
 
-    #[Route('/books/{bookId}', name: 'book_delete', methods: ['DELETE'], requirements: ['bookId' => '\d+'])]
-    public function deleteBook($bookId): Response {   
+    #[Route('/books/{bookId}', name: 'book_delete', requirements: ['bookId' => '\d+'], methods: ['DELETE'])]
+    public function deleteBook(int $bookId): Response { 
+        $rs = [];  
         $status = $this->bookService->deleteBook($bookId);
-        if($status==null)
-            return new Response(json_encode(['error' => 'Book not found']), Response::HTTP_NOT_FOUND);
-        return new Response(json_encode(['status' => 'Book deleted']), Response::HTTP_OK);
+        
+        if(!$status) {
+            // throw $this->createNotFoundException('No book found for id '.$bookId);
+            $rs = [
+                "code"    => "404",
+                "message" => "Book {$bookId} not found "
+            ];
+            return new Response($this->toJson($rs), Response::HTTP_NOT_FOUND, ['Content-Type' => 'application/json']);
+        }
+
+        $rs = [
+            "code"    => "200",
+            "message" => "Book {$bookId} deleted",
+        ];
+        return new Response($this->toJson($rs), Response::HTTP_OK, ['Content-Type' => 'application/json']);
     }
 
-    #[Route('/books/{bookId}', name: 'book_show', methods: ['GET'], requirements: ['bookId' => '\d+'])]
+    #[Route('/books/{bookId}', name: 'book_show', requirements: ['bookId' => '\d+'], methods: ['GET'])]
     public function showBook(int $bookId): Response {  
-        $bookJson = $this->bookService->getBook($bookId);
-        if($bookJson==null)
-            return new Response(json_encode(['error' => 'Book not found']), Response::HTTP_NOT_FOUND);
-        return new Response($bookJson, Response::HTTP_OK, ['Content-Type' => 'application/json']);
+        $rs = [];
+        $book = $this->bookService->getBook($bookId);
+        
+        if(!$book) {
+            $rs = [
+                "code"    => "404",
+                "message" => "Book {$bookId} not found "
+            ];
+            return new Response(json_encode($rs), Response::HTTP_NOT_FOUND, ['Content-Type' => 'application/json']);
+        }
+
+        $rs = [
+            "code"    => "200",
+            "message" => "Book {$bookId}",
+            "data"    => $this->getBookDto($book)
+            // "data"    =>  $book
+        ];
+        return new Response($this->toJson($rs), Response::HTTP_OK, ['Content-Type' => 'application/json']);
     }
 
     #[Route('/search', name: 'book_search', methods: ['GET'])]
     public function searchBook(Request $request) {  
         $searchkey = $request->query->get('title');
-        $booksJson = $this->bookService->searchBookByTitle($searchkey);
-        return new Response($booksJson, Response::HTTP_OK, ['Content-Type' => 'application/json']);
+        
+        $books = $this->bookService->searchBookByTitle($searchkey);
+
+        $rs = [
+            "code"    => "200",
+            "message" => "all Books",
+            "data"    => $this->getBookDtoArray($books)
+            // "data"    =>  $books
+        ];
+        return new Response($this->toJson($rs), Response::HTTP_OK, ['Content-Type' => 'application/json']);
     }
 
     #[Route('/books', name: 'book_all', methods: ['GET'])]
     public function allBooks(): Response {
-    	$booksJson = $this->bookService->allBooks();
-        return new Response($booksJson, Response::HTTP_OK, ['Content-Type' => 'application/json']);
+    	$books = $this->bookService->allBooks();
+
+        $rs = [
+            "code"    => "200",
+            "message" => "all Books",
+            "data"    => $this->getBookDtoArray($books)
+            // "data"    =>  $books
+        ];
+        return new Response($this->toJson($rs), Response::HTTP_OK, ['Content-Type' => 'application/json']);
+    }
+
+    public function getInputArray(Request $request){
+        return json_decode($request->getContent(), true);
+    }
+
+    public function getBookDtoArray($books){
+        $bookDtos = [];
+        foreach ($books as $book) {
+            $bookDtos[] = $this->getBookDto($book);
+        }
+        return $bookDtos;
+    }
+
+    public function getBookDto($book){
+        $bookDto = new BookDto();
+        $bookDto->setId($book->getId())
+            ->setTitle($book->getTitle())
+            ->setContent($book->getContent())
+            ->setCreatedOn(date_format($book->getCreatedOn(),'d-m-Y H:i'));
+
+        if($book->getUpdatedOn() !=null)
+            $bookDto->setUpdatedOn(date_format($book->getUpdatedOn(),'d-m-Y H:i'));
+
+        return $bookDto;
+    }
+
+    public function toJson($items){
+        $serializer = new Serializer([new ObjectNormalizer()], [new JsonEncoder()]);
+        return $serializer->serialize($items, 'json', [
+		    'circular_reference_handler' => function ($object) { return $object->getId(); },
+            'ignored_attributes' => ['book']
+	    ]);
     }
 
 }

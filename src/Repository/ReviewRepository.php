@@ -30,8 +30,8 @@ class ReviewRepository extends ServiceEntityRepository {
         $review->setName($name)
                ->setEmail($email)
                ->setContent($content)
-                ->setCreatedOn(new \DateTime("now"))
-                ->setBook($book);
+               ->setCreatedOn(new \DateTime("now"))
+               ->setBook($book);
         $this->manager->persist($review);
         $this->manager->flush(); 
         return $review;

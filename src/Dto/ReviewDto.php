@@ -9,6 +9,7 @@ class ReviewDto {
     private ?string $content = null;
     private ?string $createdOn = null;
     private ?string $updatedOn = null;
+    private ?int $bookid = null;
 
     public function __construct(){}
 
@@ -80,6 +81,18 @@ class ReviewDto {
     public function setUpdatedOn(string $updatedOn): static
     {
         $this->updatedOn = $updatedOn;
+
+        return $this;
+    }
+
+    public function getBookid(): ?int
+    {
+        return $this->bookid;
+    }
+
+    public function setBookid(int $bookid): static
+    {
+        $this->bookid = $bookid;
 
         return $this;
     }
