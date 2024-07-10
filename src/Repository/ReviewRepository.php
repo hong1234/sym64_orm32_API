@@ -2,11 +2,12 @@
 
 namespace App\Repository;
 
-use App\Entity\Review;
-use App\Entity\Book;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\ORM\EntityManagerInterface;
+
+use App\Entity\Book;
+use App\Entity\Review;
 
 class ReviewRepository extends ServiceEntityRepository { 
     private $manager;
@@ -22,14 +23,10 @@ class ReviewRepository extends ServiceEntityRepository {
     }
 
     public function saveReview(Book $book, $data) {
-        $name    = $data['name'];
-        $email   = $data['email'];
-        $content = $data['content'];
-
         $review = new Review();
-        $review->setName($name)
-               ->setEmail($email)
-               ->setContent($content)
+        $review->setName($data['name'])
+               ->setEmail($data['email'])
+               ->setContent($data['content'])
                ->setCreatedOn(new \DateTime("now"))
                ->setBook($book);
         $this->manager->persist($review);
@@ -39,9 +36,9 @@ class ReviewRepository extends ServiceEntityRepository {
 
     public function updateReview(Review $review, $data) {
         $review->setName($data['name'])
-                ->setEmail($data['email'])
-                ->setContent($data['content'])
-                ->setUpdatedOn(new \DateTime("now"));
+               ->setEmail($data['email'])
+               ->setContent($data['content'])
+               ->setUpdatedOn(new \DateTime("now"));
         $this->manager->flush();
     }
 

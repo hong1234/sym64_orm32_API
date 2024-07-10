@@ -1,10 +1,10 @@
 <?php
 namespace App\Controller;
 
-use App\Service\BookService;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
+use App\Service\BookService;
 
 #[Route('/api')]
 class BookController extends BaseController {
@@ -24,7 +24,7 @@ class BookController extends BaseController {
         $rs = [
             "code"    => "200",
             "message" => "1 Book created",
-            "data"    => $this->getBookDto($book)
+            "data"    => $this->bookService->getBookDto($book)
             // "data"    => $book
         ];
         return new Response($this->toJson($rs), Response::HTTP_CREATED, ['Content-Type' => 'application/json']);
@@ -47,7 +47,7 @@ class BookController extends BaseController {
         $rs = [
             "code"    => "200",
             "message" => "Book {$bookId} updated",
-            "data"    => $this->getBookDto($book)
+            "data"    => $this->bookService->getBookDto($book)
             // "data"    => $book
         ];
         return new Response($this->toJson($rs), Response::HTTP_OK, ['Content-Type' => 'application/json']);
@@ -90,14 +90,14 @@ class BookController extends BaseController {
         $rs = [
             "code"    => "200",
             "message" => "Book {$bookId}",
-            "data"    => $this->getBookDtoDeep($book)
+            "data"    => $this->bookService->getBookDtoDeep($book)
             // "data"    =>  $book
         ];
         return new Response($this->toJson($rs), Response::HTTP_OK, ['Content-Type' => 'application/json']);
     }
 
     #[Route('/search', name: 'book_search', methods: ['GET'])]
-    public function searchBook(Request $request) {  
+    public function searchBook(Request $request): Response {  
         $searchkey = $request->query->get('title');
         
         $books = $this->bookService->searchBookByTitle($searchkey);
@@ -105,7 +105,7 @@ class BookController extends BaseController {
         $rs = [
             "code"    => "200",
             "message" => "all Books",
-            "data"    => $this->getBookDtoArray($books)
+            "data"    => $this->bookService->getBookDtoArray($books)
             // "data"    =>  $books
         ];
         return new Response($this->toJson($rs), Response::HTTP_OK, ['Content-Type' => 'application/json']);
@@ -118,14 +118,10 @@ class BookController extends BaseController {
         $rs = [
             "code"    => "200",
             "message" => "all Books",
-            "data"    => $this->getBookDtoArray($books)
+            "data"    => $this->bookService->getBookDtoArray($books)
             // "data"    =>  $books
         ];
         return new Response($this->toJson($rs), Response::HTTP_OK, ['Content-Type' => 'application/json']);
-    }
-
-    public function getInputArray(Request $request){
-        return json_decode($request->getContent(), true);
     }
 
 }

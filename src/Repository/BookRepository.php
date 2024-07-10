@@ -2,10 +2,11 @@
 
 namespace App\Repository;
 
-use App\Entity\Book;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\ORM\EntityManagerInterface;
+
+use App\Entity\Book;
 
 class BookRepository extends ServiceEntityRepository { 
     private $manager;
@@ -25,12 +26,9 @@ class BookRepository extends ServiceEntityRepository {
     }
 
     public function saveBook($data){
-        $title   = $data['title'];
-        $content = $data['content'];
-
         $book = new Book();
-        $book->setTitle($title)
-             ->setContent($content)
+        $book->setTitle($data['title'])
+             ->setContent($data['content'])
              ->setCreatedOn(new \DateTime("now"));
 
         $this->manager->persist($book);
@@ -40,8 +38,8 @@ class BookRepository extends ServiceEntityRepository {
 
     public function updateBook(Book $book, $data){
         $book->setTitle($data['title'])
-            ->setContent($data['content'])
-            ->setUpdatedOn(new \DateTime("now"));
+             ->setContent($data['content'])
+             ->setUpdatedOn(new \DateTime("now"));
         $this->manager->flush(); 
         return $book;  
     }
