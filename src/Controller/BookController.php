@@ -96,7 +96,7 @@ class BookController extends BaseController {
         return new Response($this->toJson($rs), Response::HTTP_OK, ['Content-Type' => 'application/json']);
     }
 
-    #[Route('/search', name: 'book_search', methods: ['GET'])]
+    #[Route('/books/search', name: 'book_search', methods: ['GET'])]
     public function searchBook(Request $request): Response {  
         $searchkey = $request->query->get('title');
         
